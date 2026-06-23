@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pre-Inventory Allocation — Fyffes NA</title>
+<style>
+:root{
+  --color-primary:#005BAA;--color-yellow:#FFD200;--color-white:#FFFFFF;
+  --color-text-main:#141415;--color-text-secondary:#7A7D81;--color-text-placeholder:#939598;
+  --color-sidebar-bg:#F5F5F5;--color-menu-selected:#FEF6D7;--color-menu-hover:#EBF5FF;
+  --color-table-header:#EBF5FF;--color-border:#E0E0E0;--color-row-warning:#FFFBF0;
+  --success:#6EAE40;--warning:#FFD200;--danger:#E65C3B;--info:#05294D;--disabled:#939598;
+  --color-preinv:#FEF6D7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Calibri',Arial,sans-serif;color:var(--color-text-main);background:#ECEFF1;font-size:12px}
+.app{max-width:1100px;margin:24px auto;background:var(--color-white);border:1px solid var(--color-border);border-radius:4px;overflow:hidden}
+.topbar{height:48px;display:flex;align-items:center;gap:16px;padding:0 16px;border-bottom:1px solid var(--color-border)}
+.main{display:flex;min-height:560px}
+.sidebar{width:180px;background:var(--color-sidebar-bg);border-right:1px solid var(--color-border);padding:8px 0;flex-shrink:0}
+.content{flex:1;padding:16px 24px;min-width:0}
+/* typography */
+.page-title{font-size:18px;font-weight:400;color:var(--color-primary);margin-bottom:16px}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;color:var(--color-primary)}
+.label{font-size:12px}.bold{font-weight:700}.detail{font-size:10px;color:var(--color-text-placeholder)}
+.breadcrumb-parent{font-size:11px;color:var(--color-text-secondary)}
+.breadcrumb-current{font-size:11px;font-weight:700;color:var(--color-text-main)}
+.menu-section{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--color-text-placeholder);padding:12px 16px 4px}
+.sidebar-item{display:flex;justify-content:space-between;padding:8px 16px;font-size:11px;cursor:pointer}
+.sidebar-item:hover{background:var(--color-menu-hover)}
+.sidebar-item.selected{background:var(--color-menu-selected);color:var(--color-primary);font-weight:700}
+.sidebar-item.dash{background:#EAEAEA}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 16px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid transparent;min-width:80px}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover{background:#00468A}
+.btn-secondary{background:#fff;color:var(--color-primary);border-color:var(--color-primary);font-weight:400}
+.btn-secondary:hover{background:var(--color-menu-hover)}
+/* fields */
+.query-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:2px}
+.field label{font-size:10px;color:var(--color-text-placeholder)}
+.field .ctrl{border:0;border-bottom:1px solid var(--color-text-placeholder);background:transparent;font-size:12px;padding:4px 0;color:var(--color-text-main);font-family:inherit}
+.field .ctrl:focus{outline:0;border-bottom:2px solid var(--color-primary)}
+/* card */
+.card{border:1px solid var(--color-border);border-radius:4px;padding:16px;margin-bottom:24px}
+.report-head{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.report-head .section-title{margin-right:auto}
+/* action icons */
+.icon-btn{cursor:pointer;font-size:16px;color:var(--color-primary);line-height:1}
+.icon-btn:hover{color:var(--color-yellow)}
+/* tabs */
+.tabs{display:flex;gap:24px;border-bottom:1px solid var(--color-border);margin-bottom:16px}
+.tabs [data-tab]{background:none;border:0;padding:8px 0;font-size:13px;color:var(--color-text-placeholder);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+.tabs [data-tab]:hover{color:var(--color-primary)}
+.tabs [data-tab].active{color:var(--color-primary);font-weight:700;border-bottom-color:var(--color-primary)}
+/* table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--color-table-header);color:var(--color-primary);font-size:11px;font-weight:700;text-transform:uppercase;text-align:left;padding:6px 8px;border-bottom:1px solid #C5D8EE}
+tbody td{font-size:11px;padding:6px 8px;border-bottom:1px solid #E8E8E8}
+tbody tr:hover{background:var(--color-menu-hover)}
+.dense th,.dense td{font-size:7px;padding:4px 5px;white-space:nowrap}
+.num{text-align:right}.center{text-align:center}
+.sum-row td{font-weight:700;background:#F3F7FC}
+.grp-row td{font-weight:700;background:#F8FAFD;color:var(--color-primary)}
+.preinv-row td{background:var(--color-preinv);font-weight:700}
+.preinv-row td:first-child{color:#7a6a00}
+.neg{color:var(--danger)}
+.table-link{color:var(--color-primary);text-decoration:underline;cursor:pointer}
+.table-link:hover{color:var(--color-yellow)}
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:10}
+.modal{background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.25);width:660px;max-width:92vw;max-height:88vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--color-border)}
+.modal-head .x{cursor:pointer;color:var(--color-text-placeholder);font-size:18px}
+.modal-body{padding:20px}
+.modal-foot{display:flex;justify-content:flex-end;gap:12px;padding:14px 20px;border-top:1px solid var(--color-border)}
+.drop{border:2px dashed var(--color-text-placeholder);border-radius:6px;padding:24px;text-align:center;color:var(--color-text-secondary);background:#FAFBFC}
+.dev-note{color:var(--color-primary);margin-top:12px;font-size:10px}
+sup.mk{background:var(--color-primary);color:#fff;border-radius:50%;padding:1px 5px;font-size:9px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:56px;height:40px;background:var(--color-primary);border-radius:50%;color:#fff;font-weight:700;font-size:15px">fyffes
+      <span style="position:absolute;top:6px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--color-yellow)"></span>
+    </span>
+    <span class="breadcrumb-parent">Supply Chain</span><span class="breadcrumb-parent">|</span>
+    <span class="breadcrumb-parent">Processing</span><span>•</span>
+    <span class="breadcrumb-current">Pre-Inventory Allocation</span>
+    <span style="margin-left:auto" class="detail">Hi, David ⌄</span>
+  </div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="sidebar-item dash">Dashboard</div>
+      <div class="sidebar-item">Favorites <span>›</span></div>
+      <div class="menu-section">Applications</div>
+      <div class="sidebar-item">O2C <span>›</span></div>
+      <div class="sidebar-item">Operations <span>›</span></div>
+      <div class="sidebar-item selected">Supply Chain <span>‹</span></div>
+      <div class="sidebar-item" style="padding-left:28px">Administration <span>›</span></div>
+      <div class="sidebar-item selected" style="padding-left:28px">Processing <span>‹</span></div>
+      <div class="sidebar-item" style="padding-left:40px">Prebooks / Plans</div>
+      <div class="sidebar-item" style="padding-left:40px">Order Consolidation</div>
+      <div class="sidebar-item" style="padding-left:40px">7 Weeks Rolling Forecast Vendors</div>
+      <div class="sidebar-item selected" style="padding-left:40px">Pre-Inventory Allocation</div>
+      <div class="sidebar-item" style="padding-left:28px">Inquiries <span>›</span></div>
+      <div class="sidebar-item">C&amp;C <span>›</span></div>
+      <div class="sidebar-item">Analytics <span>›</span></div>
+      <div class="sidebar-item">Community Apps <span>›</span></div>
+      <div class="sidebar-item">Settings <span>›</span></div>
+    </div>
+    <div class="content">
+      <div style="display:flex;align-items:center;margin-bottom:16px">
+        <span class="page-title" style="margin-bottom:0">Pre-Inventory Allocation</span>
+        <span style="margin-left:auto;display:flex;gap:12px">
+          <button class="btn btn-secondary" data-open="upload">Upload Pre-Inventory</button>
+          <button class="btn btn-secondary" data-open="entry">Enter Pre-Inventory</button>
+        </span>
+      </div>
+
+      <!-- FILTER CARD -->
+      <div class="card">
+        <div class="query-grid">
+          <div class="field"><label>Arrival Week:</label><select class="ctrl"><option>21</option><option>22</option><option>23</option></select></div>
+          <div class="field"><label>Year:</label><input class="ctrl" value="2026"></div>
+          <div class="field"><label>Destination Port:</label><select class="ctrl"><option selected>ALL</option><option>Philadelphia</option><option>Houston</option><option>Wilmington</option><option>Hueneme</option></select></div>
+          <div class="field"><label>Product Class:</label><select class="ctrl"><option selected>PINAPL</option><option>EXOTIC</option><option>BANANA</option></select></div>
+          <div class="field"><label>Sales Person:</label><select class="ctrl"><option selected>ALL</option><option>CAROLINA</option><option>DIEGO</option><option>JUSTIN</option><option>LES</option><option>LISA</option><option>LISAN</option><option>RICARDO</option><option>SCOTT</option></select></div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:16px">
+          <button class="btn btn-primary">View</button>
+          <button class="btn btn-secondary">Reset</button>
+        </div>
+      </div>
+
+      <!-- REPORT CARD -->
+      <div class="card">
+        <div class="report-head">
+          <span class="section-title">All Ports — Pre-Inventory · Arrival Week 21 / 2026</span>
+          <span class="icon-btn" title="Export to Excel">⤓</span>
+        </div>
+
+        <div class="tabs">
+          <button data-tab="preinv" class="active">Pre-Inventory</button>
+          <button data-tab="alloc">Salesperson Allocation</button>
+        </div>
+
+        <!-- TAB 1: PRE-INVENTORY MATRIX (mirrors the Arrival Week farm Excel) -->
+        <div id="panel-preinv" class="tab-panel">
+          <div class="tbl-wrap">
+            <table class="dense">
+              <thead>
+                <tr>
+                  <th>Dest. Port</th><th>Vessel</th><th>Arrival Week</th><th>SKU Code</th><th>SKU FNA</th>
+                  <th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th>
+                  <th class="num">CL5/7</th><th class="num">CL6/8</th><th class="num">CL7/9</th><th class="num">CL8/11</th><th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Houston</td><td>Seaboard Pioneer 189</td><td>21</td><td>BB</td><td>(515)(516)(517)(508)</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">5</td><td class="num">16</td><td class="num"></td><td class="num"></td><td class="num">21</td></tr>
+                <tr><td></td><td></td><td></td><td>BBKGEC</td><td>(492)</td><td class="num"></td><td class="num"></td><td class="num">36</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">36</td></tr>
+                <tr class="sum-row"><td>Houston Sum</td><td></td><td></td><td></td><td></td><td class="num"></td><td class="num"></td><td class="num">36</td><td class="num"></td><td class="num">5</td><td class="num">16</td><td class="num"></td><td class="num"></td><td class="num">57</td></tr>
+                <tr><td>Philadelphia</td><td>Polar Brasil 619N</td><td>21</td><td>BB</td><td>(515)(516)(517)(508)</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">92</td><td class="num">82</td><td class="num">57</td><td class="num">5</td><td class="num">236</td></tr>
+                <tr><td></td><td></td><td></td><td>FRFR</td><td>(405)(426)(427)(428)</td><td class="num">22</td><td class="num">151</td><td class="num">123</td><td class="num">10</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">306</td></tr>
+                <tr class="sum-row"><td>Philadelphia Sum</td><td></td><td></td><td></td><td></td><td class="num">22</td><td class="num">151</td><td class="num">123</td><td class="num">10</td><td class="num">92</td><td class="num">82</td><td class="num">57</td><td class="num">5</td><td class="num">542</td></tr>
+                <tr><td>Wilmington</td><td>Maersk Monte Alto 619N</td><td>21</td><td>FRFRPTISW</td><td>(456)(477)</td><td class="num"></td><td class="num">42</td><td class="num">105</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">147</td></tr>
+                <tr><td></td><td></td><td></td><td>FRFRPTI</td><td>(456)(477)</td><td class="num"></td><td class="num">21</td><td class="num">21</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">42</td></tr>
+                <tr class="sum-row"><td>Wilmington Sum</td><td></td><td></td><td></td><td></td><td class="num"></td><td class="num">63</td><td class="num">126</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">189</td></tr>
+                <tr><td>Hueneme</td><td>Del Monte Pride 620N</td><td>21</td><td>FRFRLC</td><td>0</td><td class="num"></td><td class="num">21</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">21</td></tr>
+                <tr><td></td><td></td><td></td><td>FRFRLCSW</td><td>0</td><td class="num">9</td><td class="num">12</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">21</td></tr>
+                <tr class="sum-row"><td>Hueneme Sum</td><td></td><td></td><td></td><td></td><td class="num">9</td><td class="num">33</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">42</td></tr>
+                <tr class="grp-row"><td>Grand Total</td><td></td><td></td><td></td><td></td><td class="num">31</td><td class="num">247</td><td class="num">285</td><td class="num">10</td><td class="num">97</td><td class="num">98</td><td class="num">57</td><td class="num">5</td><td class="num">830</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="detail" style="margin-top:8px">All destination ports are shown together; a single upload file carries every port. Hueneme arrivals report 5 / 6 counts only — other ports also include cluster (CL) sizes. <sup class="mk">2</sup></p>
+        </div>
+
+        <!-- TAB 2: SALESPERSON ALLOCATION (mirrors Sales Inventory Dist Report) -->
+        <div id="panel-alloc" class="tab-panel" style="display:none">
+          <div class="tbl-wrap">
+            <table class="dense" style="margin-bottom:16px;table-layout:fixed;width:750px;max-width:none">
+              <colgroup><col style="width:74px"><col style="width:74px"><col style="width:120px"><col style="width:56px"><col style="width:74px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"></colgroup>
+              <thead>
+                <tr>
+                  <th colspan="5">All Ports · Arrival Week 21 — Part Code (SKU FNA)</th>
+                  <th class="num">405</th><th class="num">426</th><th class="num">427</th><th class="num">428</th>
+                  <th class="num">508</th><th class="num">515</th><th class="num">516</th><th class="num">517</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="preinv-row"><td colspan="5">Pre-Inventory <sup class="mk">1</sup></td><td class="num">22</td><td class="num">151</td><td class="num">123</td><td class="num">10</td><td class="num">5</td><td class="num">92</td><td class="num">82</td><td class="num">57</td></tr>
+                <tr><td colspan="5">Manifest</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+                <tr><td colspan="5">Carry Over</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+                <tr><td colspan="5">Total Sold (future SO)</td><td class="num">12</td><td class="num">144</td><td class="num">80</td><td class="num">0</td><td class="num">0</td><td class="num">88</td><td class="num">90</td><td class="num">40</td></tr>
+                <tr class="sum-row"><td colspan="5">Available vs Pre-Inventory</td><td class="num">10</td><td class="num">7</td><td class="num">43</td><td class="num">10</td><td class="num">5</td><td class="num">4</td><td class="num neg">-8</td><td class="num">17</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tbl-wrap">
+            <table class="dense" style="table-layout:fixed;width:750px;max-width:none">
+              <colgroup><col style="width:74px"><col style="width:74px"><col style="width:120px"><col style="width:56px"><col style="width:74px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"><col style="width:44px"></colgroup>
+              <thead>
+                <tr>
+                  <th>Salesperson</th><th>Order Number</th><th>Customer</th><th>Lot Number</th><th class="center">Load Date</th>
+                  <th class="num">405</th><th class="num">426</th><th class="num">427</th><th class="num">428</th><th class="num">508</th><th class="num">515</th><th class="num">516</th><th class="num">517</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="grp-row"><td colspan="13">LISAN — Orders waiting in Ross</td></tr>
+                <tr><td>LISAN</td><td><a class="table-link">AL536975</a></td><td>ALDI, INC.</td><td>—</td><td class="center">05-11-2026</td><td class="num"></td><td class="num">80</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">48</td><td class="num"></td><td class="num"></td></tr>
+                <tr><td>LISAN</td><td><a class="table-link">AL536981</a></td><td>ALDI, INC.</td><td>—</td><td class="center">05-12-2026</td><td class="num">12</td><td class="num"></td><td class="num">40</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
+                <tr class="sum-row"><td colspan="5">LISAN Subtotal</td><td class="num">12</td><td class="num">80</td><td class="num">40</td><td class="num">0</td><td class="num">0</td><td class="num">48</td><td class="num">0</td><td class="num">0</td></tr>
+                <tr class="grp-row"><td colspan="13">RICARDO — Orders waiting in Ross</td></tr>
+                <tr><td>RICARDO</td><td><a class="table-link">RC610022</a></td><td>COSTCO WHOLESALE</td><td>—</td><td class="center">05-11-2026</td><td class="num"></td><td class="num">64</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">90</td><td class="num">40</td></tr>
+                <tr><td>RICARDO</td><td><a class="table-link">RC610040</a></td><td>WALMART</td><td>—</td><td class="center">05-13-2026</td><td class="num"></td><td class="num"></td><td class="num">40</td><td class="num"></td><td class="num"></td><td class="num">40</td><td class="num"></td><td class="num"></td></tr>
+                <tr class="sum-row"><td colspan="5">RICARDO Subtotal</td><td class="num">0</td><td class="num">64</td><td class="num">40</td><td class="num">0</td><td class="num">0</td><td class="num">40</td><td class="num">90</td><td class="num">40</td></tr>
+                <tr class="grp-row"><td colspan="5">All Salespersons — Total Sold</td><td class="num">12</td><td class="num">144</td><td class="num">80</td><td class="num">0</td><td class="num">0</td><td class="num">88</td><td class="num">90</td><td class="num">40</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="dev-note">
+            <sup class="mk">1</sup> Pre-Inventory is the new preliminary-incoming layer, interleaved above Manifest / Carry Over; it converts to Manifest once the arrival week is received.<br>
+            <sup class="mk">3</sup> Total Sold and the detail rows derive from future sales orders waiting in Ross — read-only, no new persistence.<br>
+            <sup class="mk">4</sup> Negative "Available vs Pre-Inventory" (oversell of incoming fruit) is highlighted in red, matching the report's convention.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <div class="modal-head"><span class="section-title">Upload Pre-Inventory (Excel)</span><span class="x" data-close>×</span></div>
+    <div class="modal-body">
+      <div class="query-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+        <div class="field"><label>Arrival Week:</label><select class="ctrl"><option>21</option><option>22</option><option>23</option></select></div>
+        <div class="field"><label>Year:</label><input class="ctrl" value="2026"></div>
+        <div class="field"><label>Destination Port:</label><select class="ctrl"><option>ALL (from file)</option><option>Philadelphia</option><option>Houston</option><option>Wilmington</option><option>Hueneme</option></select></div>
+      </div>
+      <div class="drop">Drag the Arrival Week Excel here, or <a class="table-link">choose a file</a><br><span class="detail">Expected: AW##.xlsx (e.g., AW21-AW22-AW23.xlsx) — sheets per Arrival Week (Dest. Port · Vessel · Arrival Week · SKU · Sizes)</span></div>
+      <p class="dev-note"><sup class="mk">2</sup> The file is parsed into <span class="bold">FYF_PREBOOK_PREINVENTORY_HEADER / _LINES / _LINE_SIZES</span>. A re-upload for the same Port + Arrival Week + Year supersedes the prior load (logical delete via <span class="bold">expiredDate</span>) — final policy pending.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-secondary" data-close>Cancel</button><button class="btn btn-primary">Upload</button></div>
+  </div>
+</div>
+
+<!-- FARM ENTRY MODAL -->
+<div class="modal-overlay" id="modal-entry">
+  <div class="modal" style="width:780px">
+    <div class="modal-head"><span class="section-title">Enter Pre-Inventory — Farm Self-Service</span><span class="x" data-close>×</span></div>
+    <div class="modal-body">
+      <div class="query-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+        <div class="field"><label>Destination Port:</label><select class="ctrl"><option selected>Philadelphia</option><option>Houston</option><option>Wilmington</option><option>Hueneme</option></select></div>
+        <div class="field"><label>Vessel:</label><select class="ctrl"><option>Polar Brasil 619N</option><option>Seaboard Pioneer 189</option><option>Maersk Monte Alto 619N</option></select></div>
+        <div class="field"><label>Arrival Week / Year:</label><input class="ctrl" value="21 / 2026"></div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dense">
+          <thead><tr><th>SKU Code</th><th>SKU FNA</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">CL5/7</th><th class="num">CL6/8</th><th class="num">CL7/9</th><th class="num">CL8/11</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>BB</td><td>(515)(516)(517)(508)</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">92</td><td class="num">82</td><td class="num">57</td><td class="num">5</td><td><span class="icon-btn" title="Remove">✕</span></td></tr>
+            <tr><td>FRFR</td><td>(405)(426)(427)(428)</td><td class="num">22</td><td class="num">151</td><td class="num">123</td><td class="num">10</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="icon-btn" title="Remove">✕</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px">+ Add line</button>
+      <p class="dev-note"><sup class="mk">5</sup> Farm self-service entry is scoped to the farm's Ross vendor code (<span class="bold">vendorNumber</span>); external farm-user roles / permissions in A&amp;A are pending business confirmation.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-secondary" data-close>Cancel</button><button class="btn btn-primary">Save</button></div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('[data-tab]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var group=btn.closest('.tabs');
+    group.querySelectorAll('[data-tab]').forEach(function(b){b.classList.remove('active')});
+    btn.classList.add('active');
+    var id=btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.style.display=(p.id==='panel-'+id)?'':'none';});
+  });
+});
+document.querySelectorAll('[data-open]').forEach(function(t){
+  t.addEventListener('click',function(){document.getElementById('modal-'+t.getAttribute('data-open')).style.display='flex';});
+});
+document.querySelectorAll('.modal-overlay').forEach(function(ov){
+  ov.addEventListener('click',function(e){if(e.target===ov||e.target.hasAttribute('data-close'))ov.style.display='none';});
+});
+</script>
+</body>
+</html>
